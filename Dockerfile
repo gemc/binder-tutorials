@@ -21,7 +21,7 @@ ENV PYVISTA_TRAME_JUPYTER_MODE=extension
 USER ubuntu
 WORKDIR /home/ubuntu
 
-COPY --chown=ubuntu:ubuntu notebooks/ /home/ubuntu/notebooks/
+COPY --chown=ubuntu:ubuntu notebooks/      /home/ubuntu/notebooks/
 
 
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser"]
