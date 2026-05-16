@@ -14,7 +14,7 @@ def setup_example(example_path, keep_extensions=None, chdir=True):
 		setup_example("examples/basic/b1")
 
 	This will:
-	  - use $GEMC/examples/basic/b1 as source
+	  - use $SIM_HOME/gemc/dev/examples/basic/b1 as source
 	  - create destination ./b1
 	  - remove ./b1 if it already exists
 	  - copy only files matching KEEP_EXTENSIONS
@@ -24,7 +24,7 @@ def setup_example(example_path, keep_extensions=None, chdir=True):
 
 	keep_extensions = keep_extensions or KEEP_EXTENSIONS
 
-	gemc = Path(os.environ["GEMC"])
+	gemc = Path(os.environ["SIM_HOME"]) / "gemc" / "dev"
 	src = gemc / example_path
 
 	if not src.exists():
