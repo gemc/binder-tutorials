@@ -1,0 +1,8 @@
+{
+  "name": "GEMC Simple Flux",
+  "build": { "dockerfile": "../../Dockerfile", "context": "../.." },
+  "remoteUser": "ubuntu",
+  "forwardPorts": [8888],
+  "portsAttributes": { "8888": { "label": "JupyterLab", "onAutoForward": "openBrowser" } },
+  "postStartCommand": "jupyter lab --ip=0.0.0.0 --no-browser --ServerApp.token='' --ServerApp.password='' --ServerApp.default_url='/lab/tree/notebooks/basic/simple_flux.ipynb'"
+}
