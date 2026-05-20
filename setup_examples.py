@@ -30,7 +30,8 @@ GEMC_EXAMPLES_ROOT = Path("/opt/projects/gemc/src/examples")
 def binder_markdown(section_name: str, entry: dict[str, Any]) -> str:
 	example_name = entry["name"]
 	header = str(entry.get("header", "")).strip()
-	documentation_url = f"https://gemc.github.io/home/examples/{section_name}/{example_name}"
+	documentation_slug = entry.get("documentation", example_name)
+	documentation_url = f"https://gemc.github.io/home/examples/{section_name}/{documentation_slug}"
 
 	return f"""# GEMC in Binder
 <hr style="height:4px;border:0;background:#4a90e2;">
@@ -68,14 +69,16 @@ def comment_box(lines: list[str]) -> str:
 	return f"{top}\n{body}\n{bot}"
 
 
-def environment_setup_cell(section_name: str, example_name: str) -> str:
-	example_path = f"examples/{section_name}/{example_name}"
+def environment_setup_cell(section_name: str, entry: dict[str, Any]) -> str:
+	example_name = entry["name"]
+	source_name = entry.get("source", example_name)
+	example_path = f"examples/{section_name}/{source_name}"
 
 	header = comment_box(
 		[
 			"  Cell 1 · Environment Setup (Shift+Enter to run)  ",
 			"  import PyVista and editor          ",
-			f"  Copy {section_name}/{example_name} example to local directory  ",
+			f"  Copy {section_name}/{source_name} example to local directory  ",
 		]
 	)
 
@@ -144,7 +147,7 @@ def yaml_filename_for_entry(
 	return f"{example_name}.yaml"
 
 
-def build_geometry_cell(example_name: str, cell_number: int) -> str:
+def build_geometry_cell(example_name: str, geometry_script: str, cell_number: int) -> str:
 	header = comment_box(
 		[
 			f"  Cell {cell_number} · Build {example_name} detector (Shift+Enter to run)  ",
@@ -157,7 +160,7 @@ def build_geometry_cell(example_name: str, cell_number: int) -> str:
 
 	return f"""{header}
 
-run_geometry("{example_name}.py")
+run_geometry("{geometry_script}")
 """
 
 
@@ -174,8 +177,10 @@ def gemc_run_cell(
 	yaml_file = yaml_filename_for_entry(entry, source_dir, example_name)
 
 	camera_value = entry.get("g4camera", "[{phi: -10*deg, theta: 250*deg}]")
+	light_value = entry.get("g4light", "[{phi: 160*deg, theta: 120*deg}]")
 	driver_arg = "-g4view=[{driver: TOOLSSG_OFFSCREEN}]"
 	camera_arg = f"-g4camera={camera_value}"
+	light_arg = f"-g4light={light_value}"
 
 	header = comment_box(
 		[
@@ -195,10 +200,11 @@ from IPython.display import Image, display
 yaml={yaml_file!r}
 driver={driver_arg!r}
 camera={camera_arg!r}
+light={light_arg!r}
 nevents="-n={nevents_value}"
 nthreads="-nthreads=1"
 
-result = subprocess.run(["gemc", yaml, driver, camera, nevents, nthreads], capture_output=True, text=True)
+result = subprocess.run(["gemc", yaml, driver, camera, light, nevents, nthreads], capture_output=True, text=True)
 if result.returncode != 0:
     print("GEMC failed:")
     print(result.stderr)
@@ -282,17 +288,19 @@ def write_notebook(
 		overwrite: bool,
 ) -> None:
 	example_name = entry["name"]
+	source_name = entry.get("source", example_name)
+	geometry_script = entry.get("script", f"{source_name}.py")
 
 	if output_path.exists() and not overwrite:
 		print(f"Skipping existing notebook: {output_path}")
 		return
 
-	source_dir = gemc_examples_root / section_name / example_name
+	source_dir = gemc_examples_root / section_name / source_name
 	python_files = find_python_files(source_dir)
 
 	cells: list[dict[str, Any]] = [
 		markdown_cell(binder_markdown(section_name, entry)),
-		code_cell(environment_setup_cell(section_name, example_name)),
+		code_cell(environment_setup_cell(section_name, entry)),
 	]
 
 	for index, python_file in enumerate(python_files, start=2):
@@ -303,6 +311,7 @@ def write_notebook(
 		code_cell(
 			build_geometry_cell(
 				example_name=example_name,
+				geometry_script=geometry_script,
 				cell_number=build_cell_number,
 			)
 		)
@@ -397,7 +406,8 @@ def main() -> None:
 			if not example_name:
 				raise ValueError(f"Entry in section '{section_name}' is missing 'name'.")
 
-			output_path = args.output_dir / section_name / f"{example_name}.ipynb"
+			notebook_name = entry.get("notebook", example_name)
+			output_path = args.output_dir / section_name / f"{notebook_name}.ipynb"
 
 			write_notebook(
 				output_path=output_path,
