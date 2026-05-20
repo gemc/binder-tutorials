@@ -1,0 +1,80 @@
+name: Build Binder Cache
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: binder-cache-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-binder-cache:
+    name: Build Binder Image Cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Request Binder build
+        env:
+          BINDER_REPO: gemc/binder-tutorials
+          BINDER_REF: ${{ github.ref_name || 'main' }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import time
+          import urllib.error
+          import urllib.request
+
+          repo = os.environ["BINDER_REPO"]
+          ref = os.environ["BINDER_REF"]
+          url = f"https://mybinder.org/build/gh/{repo}/{ref}"
+
+          print(f"Requesting Binder build: {url}", flush=True)
+
+          max_attempts = 3
+          for attempt in range(1, max_attempts + 1):
+              try:
+                  request = urllib.request.Request(url, headers={"Accept": "text/event-stream"})
+                  with urllib.request.urlopen(request, timeout=1800) as response:
+                      for raw_line in response:
+                          line = raw_line.decode("utf-8", errors="replace").strip()
+                          if not line.startswith("data:"):
+                              continue
+
+                          payload = line.removeprefix("data:").strip()
+                          if not payload:
+                              continue
+
+                          try:
+                              event = json.loads(payload)
+                          except json.JSONDecodeError:
+                              print(payload, flush=True)
+                              continue
+
+                          phase = event.get("phase", "unknown")
+                          message = event.get("message", "").rstrip()
+                          print(f"[{phase}] {message}", flush=True)
+
+                          if phase == "ready":
+                              print("Binder image is ready and cached.", flush=True)
+                              sys.exit(0)
+                          if phase == "failed":
+                              print("Binder build failed.", file=sys.stderr, flush=True)
+                              sys.exit(1)
+
+                  print("Binder build stream ended before a ready event.", file=sys.stderr, flush=True)
+              except (urllib.error.URLError, TimeoutError) as exc:
+                  print(f"Attempt {attempt} failed: {exc}", file=sys.stderr, flush=True)
+
+              if attempt < max_attempts:
+                  time.sleep(30 * attempt)
+
+          sys.exit(1)
+          PY
