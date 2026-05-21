@@ -4,5 +4,5 @@
   "remoteUser": "ubuntu",
   "forwardPorts": [8888],
   "portsAttributes": { "8888": { "label": "JupyterLab", "onAutoForward": "openBrowser" } },
-  "postStartCommand": "jupyter lab --ip=0.0.0.0 --no-browser --ServerApp.token='' --ServerApp.password='' --ServerApp.default_url='/lab/tree/notebooks/basic/quickstart.ipynb'"
+  "postStartCommand": "bash -c 'DOCKER_ENTRYPOINT_SOURCE_ONLY=1 . /usr/local/bin/docker-entrypoint.sh && jupyter lab --ip=0.0.0.0 --no-browser --ServerApp.token=\"\" --ServerApp.password=\"\" --ServerApp.default_url=\"/lab/tree/notebooks/basic/quickstart.ipynb\"'"
 }
