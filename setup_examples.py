@@ -88,7 +88,7 @@ import subprocess, warnings, sys, vtk
 import pyvista as pv
 vtk.vtkObject.GlobalWarningDisplayOff()  # suppress warnings
 
-from run_geometry import run_geometry
+from pygemc.api.run_geometry import run_geometry
 from pathlib import Path
 sys.path.insert(0, str(Path.cwd().parent))
 from notebook_tools import edit, setup_example
@@ -153,7 +153,7 @@ def build_geometry_cell(example_name: str, geometry_script: str, cell_number: in
 			f"  Cell {cell_number} · Build {example_name} detector (Shift+Enter to run)  ",
 			"  ",
 			"  The geometry is rendered by PyVista in Jupyter. ",
-			"  Use the mouse to zoom/rotatoe/shift the view. "
+			"  Use the mouse to zoom/rotate/shift the view. "
 
 		]
 	)
