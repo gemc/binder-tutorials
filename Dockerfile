@@ -1,4 +1,4 @@
-FROM ghcr.io/gemc/src:dev-ubuntu-24.04
+FROM ghcr.io/gemc/src:dev-ubuntu-26.04
 
 USER root
 
@@ -6,9 +6,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --break-system-packages \
+RUN DOCKER_ENTRYPOINT_SOURCE_ONLY=1 . /usr/local/bin/docker-entrypoint.sh \
+ && python3 -m pip install --no-cache-dir \
       'jupyterlab>=3' \
       ipywidgets \
+      ipykernel \
       'pyvista[all,trame]' \
       jupyter-server-proxy \
       pandas \
@@ -24,4 +26,4 @@ WORKDIR /home/ubuntu
 COPY --chown=ubuntu:ubuntu notebooks/      /home/ubuntu/notebooks/
 
 
-CMD ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser"]
+CMD ["python3", "-m", "jupyter", "lab", "--ip=0.0.0.0", "--no-browser"]

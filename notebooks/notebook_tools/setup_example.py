@@ -4,9 +4,13 @@ import subprocess
 from pathlib import Path
 
 KEEP_EXTENSIONS = {".py", ".yaml", ".yml"}
-DEFAULT_EXAMPLES_ROOT = Path(
-	os.environ.get("GEMC_EXAMPLES_ROOT", "/opt/projects/gemc/src/examples")
-)
+
+
+def default_examples_root():
+	if "SIM_HOME" in os.environ:
+		return Path(os.environ["SIM_HOME"]) / "gemc" / "dev" / "examples"
+
+	return Path("/opt/projects/gemc/src/examples")
 
 
 def setup_example(example_path, keep_extensions=None, chdir=True):
@@ -17,7 +21,7 @@ def setup_example(example_path, keep_extensions=None, chdir=True):
 		setup_example("examples/basic/b1")
 
 	This will:
-	  - use /opt/projects/gemc/src/examples/basic/b1 as source
+	  - use $SIM_HOME/gemc/dev/examples/basic/b1 as source
 	  - create destination ./b1
 	  - remove ./b1 if it already exists
 	  - copy only files matching KEEP_EXTENSIONS
@@ -27,7 +31,7 @@ def setup_example(example_path, keep_extensions=None, chdir=True):
 
 	keep_extensions = keep_extensions or KEEP_EXTENSIONS
 
-	src = DEFAULT_EXAMPLES_ROOT / Path(example_path).relative_to("examples")
+	src = default_examples_root() / Path(example_path).relative_to("examples")
 
 	if not src.exists():
 		raise FileNotFoundError(f"Source directory does not exist: {src}")
