@@ -13,7 +13,7 @@ def default_examples_root():
 	return Path("/opt/projects/gemc/src/examples")
 
 
-def setup_example(example_path, keep_extensions=None, chdir=True):
+def setup_example(example_path, keep_extensions=None, keep_directories=None, chdir=True):
 	"""
 	Copy selected files from a GEMC example directory into the notebook directory.
 
@@ -24,12 +24,13 @@ def setup_example(example_path, keep_extensions=None, chdir=True):
 	  - use $SIM_HOME/gemc/dev/examples/basic/b1 as source
 	  - create destination ./b1
 	  - remove ./b1 if it already exists
-	  - copy only files matching KEEP_EXTENSIONS
+	  - copy only files matching KEEP_EXTENSIONS and selected directories
 	  - optionally cd into ./b1
 	  - run ls -l
 	"""
 
 	keep_extensions = keep_extensions or KEEP_EXTENSIONS
+	keep_directories = set(keep_directories or [])
 
 	src = default_examples_root() / Path(example_path).relative_to("examples")
 
@@ -56,6 +57,8 @@ def setup_example(example_path, keep_extensions=None, chdir=True):
 	for item in src.iterdir():
 		if item.is_file() and item.suffix in keep_extensions:
 			shutil.copy2(item, dst / item.name)
+		elif item.is_dir() and item.name in keep_directories:
+			shutil.copytree(item, dst / item.name)
 
 	if chdir:
 		os.chdir(dst)
