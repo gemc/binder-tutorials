@@ -10,6 +10,7 @@ GEMC Jupyter Notebooks Tutorials on Binder
 - [Materials](notebooks/basic/materials.ipynb)
 - [Scintillator barrel](notebooks/basic/scintillator_barrel.ipynb)
 - [CAD organs](notebooks/basic/cad.ipynb)
+- [Boolean solids](notebooks/basic/boolean_solids.ipynb)
 - [B1](notebooks/basic/b1.ipynb) - deprecated; kept for reference.
 - [Simple flux](notebooks/basic/simple_flux.ipynb) - deprecated; kept for reference.
 
